@@ -4,6 +4,7 @@ require_once 'auth.php';
 require_once 'db.php';
 
 
+
 // URL'den id al: guncelle.php?id=5
 $id = (int)($_GET['id'] ?? 0); // (int) ile sayıya çevir → güvenlik
 
@@ -23,22 +24,101 @@ if (!$kullanici){
     header('Location: listele.php');
     exit;
 }
+$id = $kullanici['id'];
+$ad = $kullanici['ad'];
+$soyad = $kullanici['soyad'];
+$email = $kullanici['email'];
+$telefon = $kullanici['telefon'];
+// echo "Mevcut Bilgiler " . "<br>" . "ID ====> {$id} " . "<br>" . "AD ====> {$ad} " . "<br>" . "SOYAD ====> {$soyad} " . "<br>" . "EMAİL ====> {$email} " . "<br>" . "TELEFON ====> {$telefon} " . "<br>" ;
+echo 
+"<table border='2'> ".
+    "<tr>".
+        "<td>" 
+            ."<b> ID </b>".
+        "</td>" 
+
+        . "<td>" 
+            ."<b> AD </b>". 
+        "</td>".
+
+        "<td>"
+            ."<b> SOYAD </b>". 
+        "</td>".
+
+        "<td>" 
+            ."<b> EMAİL </b>". 
+        "</td>".
+
+        "<td>" 
+            ."<b> TELEFON </b>". 
+        "</td>".
+    "</tr>".
+
+    "<tr>" .
+        "<td>" 
+            . "{$id}" .
+        "</td>" 
+
+        . "<td>" 
+            . "{$ad}" . 
+        "</td>".
+
+        "<td>"
+            . "{$soyad}" . 
+        "</td>".
+
+        "<td>" 
+            . "{$email}" . 
+        "</td>".
+
+        "<td>" 
+            ."{$telefon}" . 
+        "</td>".
+    "</tr>".
+
+    
+"</table>";
+
 
 $mesaj = '';
 $hata = '';
 
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
-    $ad = trim($_POST['ad'] ?? '');
-    $soyad = trim($_POST['soyad'] ?? '');
-    $email = trim($_POST['email'] ?? '');
-    $telefon = trim($_POST['telefon'] ?? '');
+    $guncel_ad = trim($_POST['ad'] ?? '');
+    $guncel_soyad = trim($_POST['soyad'] ?? '');
+    $guncel_email = trim($_POST['email'] ?? '');
+    $guncel_telefon = trim($_POST['telefon'] ?? '');
+    
+    // 2. E-posta Sistemde Kayıtlı mı Kontrolü
+    $emailSorgu = $pdo->prepare("SELECT id FROM kullanicilar WHERE email = ?");
+    $emailSorgu->execute([$guncel_email]);
+    $emailSonuc = $emailSorgu->fetch();
 
-    if(empty($ad) || empty($soyad) || empty($email)){
+    // 3. Telefon Numarası Sistemde Kayıtlı mı Kontrolü     
+    $telefonSorgu = $pdo->prepare("SELECT id FROM kullanicilar WHERE telefon = ?");
+    $telefonSorgu->execute([$guncel_telefon]);
+    $telefonSonuc = $telefonSorgu->fetch();
+
+ 
+
+    if(empty($guncel_ad) || empty($guncel_soyad) || empty($guncel_email)){
         $hata = 'Ad, soyad ve email zorunludur!';
     }
-    elseif(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+
+    elseif(!filter_var($guncel_email, FILTER_VALIDATE_EMAIL)){
         $hata = 'Geçersiz email formatı';
     }
+
+    //Eğer bu email sistemde kayıtlı VE ID'si formdan gelen ID değilse
+    elseif ($emailSorgu -> rowCount() > 0 && $emailSonuc['id'] != $id){
+        $hata = 'Bu email sistemde zaten kayıtlı!';
+    }
+
+    //Eğer bu telefon sistemde kayıtlı VE id numarası formdan gelen ID değilse
+    else if($telefonSorgu -> rowCount() > 0 && $telefonSonuc['id'] != $id){
+        $hata = 'Bu telefon numarası sistemde zaten kayıtlı';
+    }
+
     else{
         try {
             $stmt= $pdo ->prepare(
@@ -47,15 +127,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
                 WHERE id = :id"
                 );
             $stmt->execute([
-                ':ad' => $ad,
-                ':soyad' => $soyad,
-                ':email' => $email,
-                ':telefon' => $telefon,
+                ':ad' => $guncel_ad,
+                ':soyad' => $guncel_soyad,
+                ':email' => $guncel_email,
+                ':telefon' => $guncel_telefon,
                 ':id' => $id
             ]);
             $mesaj = "Kullanıcı güncellendi!";
             //Güncel veriyi tekrar çek
-            $kullanici = ['ad'=> $ad, 'soyad'=> $soyad, 'email'=>$email, 'telefon'=>$telefon ];
+            $kullanici = ['ad'=> $guncel_ad, 'soyad'=> $guncel_soyad, 'email'=>$guncel_email, 'telefon'=>$guncel_telefon ];
         } catch (PDOException $e) {
             $hata = 'Güncelleme hatası; Bu email başka bir kullanıcıda kayıtlı olabilir.';
         }
