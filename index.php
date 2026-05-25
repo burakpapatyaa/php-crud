@@ -23,6 +23,8 @@ require_once 'db.php';
     <p>Kullanıcı yönetim panelindesin.</p>
     
     <div class="nav">
+
+        <a href="admin/listele.php">📋 Yöneticileri Listele</a>
         <a href="listele.php">📋 Kullanıcıları Listele</a>
         <a href="kaydet.php">➕ Yeni Kullanıcı Ekle</a>
         <a href="logout.php" class="cikis">🚪 Çıkış Yap</a>

@@ -31,16 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST')
         // 2. E-posta Sistemde Kayıtlı mı Kontrolü
         $emailSorgu = $pdo->prepare("SELECT id FROM kullanicilar WHERE email = ?");
         $emailSorgu->execute([$email]);
+        $emailSorgu = $emailSorgu->fetch();
 
         // 3. Telefon Numarası Sistemde Kayıtlı mı Kontrolü
         $telefonSorgu = $pdo->prepare("SELECT id FROM kullanicilar WHERE telefon = ?");
         $telefonSorgu->execute([$telefon]);
+        $telefonSorgu = $telefonSorgu->fetch();
 
-        
+
+        if($telefonSorgu['telefon'] == $telefon){
+            $hata = 'Bu telefon numarası zaten sisteme kayıtlı!';
+        }
+
+        else if($emailSorgu['email'] == $email){
+            $hata = 'Bu email adresi zaten sisteme kayıtlı!';
+        }
 
         else{
             try {
-                //code...
                 $stmt = $pdo->prepare("INSERT INTO kullanicilar (ad, soyad, email, telefon) VALUES (:ad, :soyad, :email, :telefon)");
                 $stmt->execute([
                     ':ad' => $ad,

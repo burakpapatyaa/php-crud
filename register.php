@@ -1,63 +1,60 @@
-<!-- GİRİŞ SAYFASI -->
 <?php
-session_start(); //PHP oturumunu başlat (her sayfada olmalı)
+session_start();
 
-if (isset($_SESSION['giris_yapildi'])){
-    header('Location: index.php');
-    exit;
-}
+require_once 'db.php';
+$hata = '';
+$mesaj = '';
 
-require_once 'db.php'; //Veritabanı bağlantısını dahil et
-
-$hata = '';  //Hata mesajı için boş değişken
-
-//FORM GÖNDERİLDİYSE
-if($_SERVER['REQUEST_METHOD'] == "POST"){
-
-    //Kullanıcıdan gelen veriyi al ve temizle
-    //trim() başındaki/sonundaki boşlukları sil
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST'){
     $email = trim($_POST['email'] ?? '');
     $parola = trim($_POST['password'] ?? '');
 
-    if(empty($email) || empty($parola)){
-        $hata = 'Kullanıcı adı ve şifre boş bırakılamaz!';
+    //Yönetici veritabanında kayıtlı mı kontrolü
+    $stmt = $pdo->prepare("SELECT * FROM yoneticiler WHERE email = :email AND sifre = :sifre");
+    $stmt->execute([
+        ':email' => $email,
+        ':sifre' => $parola
+    ]);
+    $yonetici = $stmt->fetch();
+    if ($yonetici){
+        $hata = "Bu hesap zaten kayıtlı!";
     }
     else{
-        // Prepared Statement → SQL Injection'a karşı güvenli sorgu
-        // :email → placeholder, gerçek değer aşağıda bağlanır
-        //Yönetici veritabanında var mı?
-        $stmt = $pdo->prepare("SELECT * FROM yoneticiler WHERE email = :email");
-        $stmt->execute([':email' => $email]);
-        $yonetici = $stmt->fetch();
+        try {
+            //code...
+            $hash_sifre = password_hash($parola, PASSWORD_BCRYPT);
+
+            $stmt = $pdo->prepare("INSERT INTO yoneticiler (email, sifre) VALUES (:email, :sifre)");
+            $stmt -> execute([
+                ':email' => $email,
+                ':sifre' => $hash_sifre
+            ]);
+            echo "Başarılı";
+            $mesaj = 'Kullanıcı başarıyla eklendi!';
+            // header('Location: login.php');
 
 
-        //Kullanıcı bulunduysa parolayı kontrol et
-        //password_verify() -> hashlenmiş şifre ile girilen şifreyi karşılaştırır
-
-        if ($yonetici && password_verify($parola, $yonetici['sifre'])){
-            //Oturum Değişkenklerini Ayarla
-
-            $_SESSION['giris_yapildi'] = true;
-            $_SESSION['yonetici_adi'] = $yonetici['email'];
-
-            header('Location: index.php'); // Ana sayfaya yönlendir
-            exit;
+            $mesaj = $hata;
+        } 
+        catch (PDOException $e) {
+            $hata = 'Bilinmeyen bir hata oluştu!' . '<br>' . 'Hata:  ' . $e;
+            // $hata = 'Bilinmeyen bir hata oluştu!';
         }
-        else{
-            $hata = "Kullanıcı adı veya parola yanlış!";
-        }
+        
     }
+}
+else{
+    $hata = 'Bağlantı başarısız';
 }
 ?>
 
 <!DOCTYPE html>
-<html>
-
+<html lang="tr">
 <head>
-    <title>HTML Login Form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol</title>
     <style>
-
         body {
             display: flex;
             align-items: center;
@@ -111,26 +108,24 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
             width: 100%;
             font-size: 16px;
         }
-
         .wrap {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-</style>
+    </style>
 </head>
-
-<body>
+<body>  
     <div class="main">
-        <h1>Hoş geldiniz</h1>
-        <h3>Kullanıcı Bilgilerini Giriniz</h3>
-
+        <h1>Aramıza Katıl!</h1>
+        <h3>Kayıt Bilgilerini Giriniz</h3>
         <form method="POST">
+            <h2 style="color: red;"><?= $mesaj ?></h2>
             <label for="first">
                 Email Adresi:
             </label>
             <input type="email" name="email" 
-                placeholder="Email Adresi giriniz" required>
+                placeholder="Kullanıcı adı giriniz" required>
 
             <label for="password">
                 Parola:
@@ -140,17 +135,16 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
 
             <div class="wrap">
                 <button type="submit">
-                    Giriş Yap
+                    Kayıt Ol
                 </button>
             </div>
         </form>
         
-        <p>Hesabınız Yok mu?
-            <a href="register.php" style="text-decoration: none;">
-                Hesap Oluşturun
+        <p>Hesabınız Var mı?
+            <a href="login.php" style="text-decoration: none;">
+                Giriş Yapın
             </a>
         </p>
     </div>
 </body>
-
 </html>
