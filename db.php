@@ -1,7 +1,7 @@
 <!-- VERİTABANI BAĞLANTISI -->
 <?php
 $host = 'localhost';            //MYSQL Sunucu Adresi
-$db_name = 'proje_deneme';      //Veritabanı Adı
+$db_name = 'site_db';      //Veritabanı Adı
 $username = 'root';             //MYSQL Kullanıcı Adı
 $password = '';                 //Veritabanı Parolası
 $charset = 'utf8mb4';           //Veritabanı charset (Türkçe Karakterler için utf8mb şart!)

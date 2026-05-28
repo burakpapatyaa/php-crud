@@ -35,7 +35,9 @@ Arayüz tasarımı sade tutulmuş olsa da **tüm PHP ve SQL kodları tarafımdan
 ```
 site/
 ├── admin/           → Yöneticilerle ilgili dosyalar
-├    ├── listele.php           → Yöneticileri Listeleme
+|    ├── guncelle.php      → Yönetici Bilgilerini Güncelleme
+|    ├── listele.php       → Yöneticileri Listeleme
+|    └── sil.php           → Yöneticileri Silme
 ├── db.php           → Veritabanı bağlantısı (PDO)
 ├── auth.php         → Merkezi oturum/yetki kontrolü (DRY prensibi)
 ├── login.php        → Giriş formu ve oturum başlatma

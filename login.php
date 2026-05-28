@@ -111,7 +111,9 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
             width: 100%;
             font-size: 16px;
         }
-
+        .hata{
+            color: #ff0000;
+        }
         .wrap {
             display: flex;
             justify-content: center;
@@ -124,6 +126,7 @@ if($_SERVER['REQUEST_METHOD'] == "POST"){
     <div class="main">
         <h1>Hoş geldiniz</h1>
         <h3>Kullanıcı Bilgilerini Giriniz</h3>
+        <h2 class="hata"><?= $hata ?></h2>
 
         <form method="POST">
             <label for="first">
